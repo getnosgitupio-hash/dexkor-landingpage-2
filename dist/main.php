@@ -1,124 +1,239 @@
 <?php
-declare(strict_types=1);
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header("Content-Type: application/json");
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
+// =========================
+// ONLY POST METHOD
+// =========================
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
     echo json_encode([
-        'success' => false,
-        'message' => 'Only POST requests are allowed.',
+        "success" => false,
+        "message" => "Invalid Request"
     ]);
+
     exit;
 }
 
-$json = json_decode(file_get_contents('php://input') ?: '', true);
-$body = is_array($json) ? $json : $_POST;
-
-function field(string $key, array $body): string
-{
-    return trim((string)($body[$key] ?? ''));
+// =========================
+// SANITIZE INPUTS
+// =========================
+function clean($data) {
+    return htmlspecialchars(trim($data));
 }
 
-function is_personal_email(string $email): bool
-{
-    $domain = strtolower(substr(strrchr($email, '@') ?: '', 1));
-    $personalDomains = [
-        'gmail.com',
-        'yahoo.com',
-        'hotmail.com',
-        'outlook.com',
-        'live.com',
-        'aol.com',
-        'icloud.com',
-        'protonmail.com',
-        'proton.me',
-        'zoho.com',
-        'msn.com',
-        'rediffmail.com',
-    ];
+$data = json_decode(file_get_contents("php://input"), true);
 
-    return in_array($domain, $personalDomains, true);
+$name     = clean($data["name"] ?? "");
+$email    = clean($data["email"] ?? "");
+$phone    = clean($data["phone"] ?? "");
+$company  = clean($data["company"] ?? "");
+$biztype  = clean($data["biztype"] ?? "");
+
+// =========================
+// VALIDATION
+// =========================
+if (
+    empty($name) ||
+    empty($email) ||
+    empty($phone) ||
+    empty($company) ||
+    empty($biztype)
+) {
+
+    echo json_encode([
+        "success" => false,
+        "message" => "All fields are required"
+    ]);
+
+    exit;
 }
 
-$name = field('name', $body);
-$company = field('company', $body);
-$email = field('email', $body);
-$phone = field('phone', $body);
-$teamSize = field('biztype', $body) ?: field('teamSize', $body);
-
-$errors = [];
-
-if (mb_strlen($name) < 3) {
-    $errors[] = 'Enter a valid full name.';
-}
-
-if (mb_strlen($company) < 2) {
-    $errors[] = 'Enter a valid company name.';
-}
-
+// =========================
+// EMAIL VALIDATION
+// =========================
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $errors[] = 'Enter a valid work email.';
-} elseif (is_personal_email($email)) {
-    $errors[] = 'Enter your company/work email.';
-}
 
-if (mb_strlen(preg_replace('/\D+/', '', $phone)) < 7) {
-    $errors[] = 'Enter a valid phone number.';
-}
-
-if ($teamSize === '') {
-    $errors[] = 'Select team size.';
-}
-
-if ($errors !== []) {
-    http_response_code(422);
     echo json_encode([
-        'success' => false,
-        'message' => implode(' ', $errors),
+        "success" => false,
+        "message" => "Invalid Email"
     ]);
+
     exit;
 }
 
-$lead = [
-    'created_at' => date('c'),
-    'name' => $name,
-    'company' => $company,
-    'email' => $email,
-    'phone' => $phone,
-    'team_size' => $teamSize,
-    'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+// =========================
+// BLOCK PERSONAL EMAILS
+// =========================
+$blockedDomains = [
+    "gmail.com",
+    "yahoo.com",
+    "hotmail.com",
+    "outlook.com",
+    "live.com",
+    "icloud.com",
+    "aol.com",
+    "protonmail.com",
+    "zoho.com"
 ];
 
-$file = __DIR__ . '/leads.csv';
-$isNewFile = !file_exists($file);
-$handle = fopen($file, 'ab');
+$emailDomain = strtolower(substr(strrchr($email, "@"), 1));
 
-if ($handle === false) {
-    http_response_code(500);
+if (in_array($emailDomain, $blockedDomains)) {
+
     echo json_encode([
-        'success' => false,
-        'message' => 'Unable to save lead.',
+        "success" => false,
+        "message" => "Please enter your work email"
     ]);
+
     exit;
 }
 
-if ($isNewFile) {
-    fputcsv($handle, array_keys($lead));
+// =========================
+// EMAIL SETTINGS
+// =========================
+$to = "sriethiraj@getnos.io";
+$subject = "New Strategy Call Lead - Dexkor";
+
+// =========================
+// LOGO
+// =========================
+$logo = "https://getnos.io/db-new-lp/logo.png";
+
+// =========================
+// EMAIL TEMPLATE
+// =========================
+$message = '
+<html>
+<head>
+  <title>New Lead</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:40px 0;">
+
+<tr>
+<td align="center">
+
+<table width="650" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;">
+
+<tr>
+<td style="background:#0B0B0B;padding:30px;text-align:center;">
+
+<img src="'.$logo.'" alt="dexkor" style="max-width:180px;">
+
+</td>
+</tr>
+
+<tr>
+<td style="padding:40px;">
+
+<h2 style="margin-top:0;color:#111;font-size:28px;">
+New Strategy Call Lead
+</h2>
+
+<p style="font-size:16px;color:#666;">
+A new lead has been submitted from the landing page.
+</p>
+
+<table width="100%" cellpadding="12" cellspacing="0" style="margin-top:25px;border-collapse:collapse;">
+
+<tr>
+<td style="background:#f8f8f8;font-weight:bold;width:180px;">
+Full Name
+</td>
+<td style="background:#fafafa;">
+'.$name.'
+</td>
+</tr>
+
+<tr>
+<td style="background:#f8f8f8;font-weight:bold;">
+Email
+</td>
+<td style="background:#fafafa;">
+'.$email.'
+</td>
+</tr>
+
+<tr>
+<td style="background:#f8f8f8;font-weight:bold;">
+Phone Number
+</td>
+<td style="background:#fafafa;">
+'.$phone.'
+</td>
+</tr>
+
+<tr>
+<td style="background:#f8f8f8;font-weight:bold;">
+Company
+</td>
+<td style="background:#fafafa;">
+'.$company.'
+</td>
+</tr>
+
+<tr>
+<td style="background:#f8f8f8;font-weight:bold;">
+Business Type
+</td>
+<td style="background:#fafafa;">
+'.$biztype.'
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+<tr>
+<td style="padding:24px;text-align:center;background:#fafafa;color:#777;font-size:13px;">
+� '.date("Y").' Dexkor. All rights reserved.
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+</table>
+
+</body>
+</html>
+';
+
+// =========================
+// EMAIL HEADERS
+// =========================
+$headers  = "MIME-Version: 1.0" . "\r\n";
+$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+$headers .= "From: Dexkor <hello@getnos.io>" . "\r\n";
+$headers .= "Reply-To: ".$email . "\r\n";
+
+// =========================
+// SEND EMAIL
+// =========================
+$mailSent = mail($to, $subject, $message, $headers);
+
+// =========================
+// RESPONSE
+// =========================
+if ($mailSent) {
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Lead submitted successfully"
+    ]);
+
+} else {
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Email sending failed"
+    ]);
+
 }
-
-fputcsv($handle, $lead);
-fclose($handle);
-
-echo json_encode([
-    'success' => true,
-    'message' => 'Lead saved successfully.',
-]);
+?>

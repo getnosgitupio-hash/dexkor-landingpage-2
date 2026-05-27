@@ -119,6 +119,7 @@ const FormSection = () => {
   // SUBMIT
   // =========================
   const handleSubmit = async (e) => {
+
   e.preventDefault();
 
   if (!validateForm()) return;
@@ -126,40 +127,50 @@ const FormSection = () => {
   setIsSubmitting(true);
 
   try {
-    const response = await fetch(
-      "https://getnos.io/dexkor-new-lp/main.php",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
 
-        body: JSON.stringify({
-          name: formData.name,
-          company: formData.company,
-          email: formData.email,
-          phone: `${formData.countryCode} ${formData.phone}`,
-          biztype: formData.teamSize,
-        }),
-      }
-    );
+   const response = await fetch(
+  "https://getnos.io/dexkor-new-lp/main.php",
+  {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+    },
+
+    body: JSON.stringify({
+      name: formData.name,
+      company: formData.company,
+      email: formData.email,
+      phone: `${formData.countryCode} ${formData.phone}`,
+      biztype: formData.teamSize,
+    }),
+  }
+);
 
     const data = await response.json();
 
     if (data.success) {
+
       window.location.href =
         "https://calendly.com/richard-dexkor/dexkor-demo-call-with-founder";
-    } else {
-      alert(data.message || "Something went wrong");
-    }
-  } catch (error) {
-    console.log(error);
 
+    } else {
+
+      alert(data.message || "Something went wrong");
+
+    }
+
+  } catch (error) {
+
+    console.log(error);
     alert("Unable to connect to backend.");
+
   }
 
   setIsSubmitting(false);
+
 };
+
 
   // =========================
   // RESET ON BACK
