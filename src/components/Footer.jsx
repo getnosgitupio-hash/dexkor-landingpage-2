@@ -137,49 +137,68 @@ const Footer = () => {
       </footer>
 
       {/* TICKER */}
-      {showTicker && (
-        <div
-          className="ticker"
-          id="ticker"
-        >
-          <button
-            className="close"
-            onClick={hideTicker}
-            aria-label="Close"
+  {showTicker && (
+  <div className="fixed bottom-5 left-5 z-[9999] flex w-[370px] items-center rounded-[999px] bg-[#1f6fbf] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+
+    {/* CLOSE */}
+    <button
+      className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#D9D9DE] text-[16px] text-gray-600"
+      onClick={hideTicker}
+      aria-label="Close"
+    >
+      ×
+    </button>
+
+    {/* AVATAR */}
+    <div className="mr-3 flex h-[68px] w-[68px] flex-shrink-0 items-center justify-center rounded-full bg-[#DCE3F8]">
+
+      <svg
+        width="26"
+        height="26"
+        viewBox="0 0 24 24"
+        fill="#5B6EE8"
+      >
+        <path d="M12 2C8.69 2 6 4.69 6 8c0 4.25 6 12 6 12s6-7.75 6-12c0-3.31-2.69-6-6-6zm0 8.5A2.5 2.5 0 1 1 12 5.5a2.5 2.5 0 0 1 0 5z"/>
+      </svg>
+
+    </div>
+
+    {/* CONTENT */}
+    <div className="flex-1 leading-tight">
+
+      <div className="text-[14px] font-[600] text-white">
+        Head of CX, Series B SaaS{" "}
+        <span className="font-[400] text-white/90">
+          just downloaded the playbook
+        </span>
+      </div>
+
+      <div className="mt-2 flex items-center gap-2 text-[12px] text-white/90">
+
+        <span>2 min ago</span>
+
+        <span className="h-[4px] w-[4px] rounded-full bg-white/70"></span>
+
+        <span className="flex items-center gap-1 font-[700] text-white">
+
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="white"
           >
-            ×
-          </button>
+            <path d="M12 2L14.9 8.1L22 9.2L17 14L18.2 21L12 17.8L5.8 21L7 14L2 9.2L9.1 8.1L12 2Z"/>
+          </svg>
 
-          <div
-            className="av"
-            id="tav"
-          >
-            VS
-          </div>
+          Verified by Proof
+        </span>
 
-          <div className="body">
-            <div
-              className="msg"
-              id="tmsg"
-            >
-              <b>VP Support at FleetPilot</b> just booked a HelpDesk
-              demo
-            </div>
+      </div>
 
-            <div className="meta">
-              <span className="live">
-                Live
-              </span>
+    </div>
 
-              &nbsp;·&nbsp;
-
-              <span id="ttime">
-                2 min ago
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+  </div>
+)}
     </>
   );
 };
